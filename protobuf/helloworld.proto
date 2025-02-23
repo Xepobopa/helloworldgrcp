@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package helloworld;
+
+
+service Greeter {
+    rpc sayHello(Request) returns (Reply) {}
+}
+
+message Request {
+    string name = 1;
+}
+
+message Reply {
+    string message = 1;
+    string datetime = 2;
+}
+
+// generate
+/*
+protoc --proto_path=protobuf "protobuf/helloworld.proto" --go_out=services/common/genproto --go_opt=paths=source_relative --go-grpc_out=services/common/genproto --go-grpc_opt=paths=source_relative
+*/
