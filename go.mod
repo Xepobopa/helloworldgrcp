@@ -1,4 +1,4 @@
-module main.go
+module github.com/Xepobopa/helloworldgrpc
 
 go 1.24.0
 
