@@ -20,13 +20,13 @@ func (s *server) SayHello(_ context.Context, in *pb.Request) (*pb.Reply, error) 
 
 func main() {
 	lis, err := net.Listen("tcp", ":50051")
-	if (err != nil) {
+	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
 	s := grpc.NewServer()
-	pb.RegisterGreeterServer(s, &server{});
-	log.Printf("server listening at %v", lis.Addr());
+	pb.RegisterGreeterServer(s, &server{})
+	log.Printf("server listening at %v", lis.Addr())
 
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve %v", err)

@@ -16,21 +16,21 @@ var (
 )
 
 func main() {
-	flag.Parse();
+	flag.Parse()
 
 	// setup connection to server
-	conn, err := grpc.NewClient(*addr, grpc.WithTransportCredentials(insecure.NewCredentials()));
+	conn, err := grpc.NewClient(*addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}
-	defer conn.Close();
-	c := pb.NewGreeterClient(conn);
+	defer conn.Close()
+	c := pb.NewGreeterClient(conn)
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second);
-	defer cancel();
-	r, err := c.SayHello(ctx, &pb.Request{Name: "Dima"});
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	r, err := c.SayHello(ctx, &pb.Request{Name: "Dima"})
 	if err != nil {
-		log.Fatalf("could not greet: %v", err);
+		log.Fatalf("could not greet: %v", err)
 	}
-	log.Printf("Greeting: %s", r.GetMessage());
+	log.Printf("Greeting: %s", r.GetMessage())
 }
