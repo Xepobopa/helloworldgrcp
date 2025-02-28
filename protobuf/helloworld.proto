@@ -1,24 +1,23 @@
 syntax = "proto3";
 
 option go_package = "github.com/Xepobopa/helloworldgrcp/services/genproto";
+import "google/protobuf/empty.proto";
 
 package helloworld;
 
 
-service Greeter {
-    rpc SayHello(Request) returns (Reply) {}
+service SendBroadcast {
+    rpc Broadcast(ReqMessage) returns (google.protobuf.Empty) {}
 }
 
-message Request {
-    string name = 1;
-}
-
-message Reply {
-    string message = 1;
-    string datetime = 2;
+message ReqMessage {
+    int64 id = 1;
+    string username = 2;
+    string text = 3;
+    string datetime = 4;
 }
 
 // generate
 /*
-protoc --proto_path=protobuf "protobuf/helloworld.proto" --go_out=services/common/genproto --go_opt=paths=source_relative --go-grpc_out=services/common/genproto --go-grpc_opt=paths=source_relative
+protoc --proto_path=protobuf "protobuf/helloworld.proto" --go_out=services/genproto --go_opt=paths=source_relative --go-grpc_out=services/genproto --go-grpc_opt=paths=source_relative
 */
