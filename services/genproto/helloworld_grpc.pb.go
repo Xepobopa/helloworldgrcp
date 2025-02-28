@@ -21,13 +21,15 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	SendBroadcast_Broadcast_FullMethodName = "/helloworld.SendBroadcast/Broadcast"
+	SendBroadcast_Subscribe_FullMethodName = "/helloworld.SendBroadcast/Subscribe"
 )
 
 // SendBroadcastClient is the client API for SendBroadcast service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type SendBroadcastClient interface {
-	Broadcast(ctx context.Context, in *ReqMessage, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	Broadcast(ctx context.Context, in *Message, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	Subscribe(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Message], error)
 }
 
 type sendBroadcastClient struct {
@@ -38,7 +40,7 @@ func NewSendBroadcastClient(cc grpc.ClientConnInterface) SendBroadcastClient {
 	return &sendBroadcastClient{cc}
 }
 
-func (c *sendBroadcastClient) Broadcast(ctx context.Context, in *ReqMessage, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *sendBroadcastClient) Broadcast(ctx context.Context, in *Message, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, SendBroadcast_Broadcast_FullMethodName, in, out, cOpts...)
@@ -48,11 +50,31 @@ func (c *sendBroadcastClient) Broadcast(ctx context.Context, in *ReqMessage, opt
 	return out, nil
 }
 
+func (c *sendBroadcastClient) Subscribe(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Message], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &SendBroadcast_ServiceDesc.Streams[0], SendBroadcast_Subscribe_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[emptypb.Empty, Message]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type SendBroadcast_SubscribeClient = grpc.ServerStreamingClient[Message]
+
 // SendBroadcastServer is the server API for SendBroadcast service.
 // All implementations must embed UnimplementedSendBroadcastServer
 // for forward compatibility.
 type SendBroadcastServer interface {
-	Broadcast(context.Context, *ReqMessage) (*emptypb.Empty, error)
+	Broadcast(context.Context, *Message) (*emptypb.Empty, error)
+	Subscribe(*emptypb.Empty, grpc.ServerStreamingServer[Message]) error
 	mustEmbedUnimplementedSendBroadcastServer()
 }
 
@@ -63,8 +85,11 @@ type SendBroadcastServer interface {
 // pointer dereference when methods are called.
 type UnimplementedSendBroadcastServer struct{}
 
-func (UnimplementedSendBroadcastServer) Broadcast(context.Context, *ReqMessage) (*emptypb.Empty, error) {
+func (UnimplementedSendBroadcastServer) Broadcast(context.Context, *Message) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Broadcast not implemented")
+}
+func (UnimplementedSendBroadcastServer) Subscribe(*emptypb.Empty, grpc.ServerStreamingServer[Message]) error {
+	return status.Errorf(codes.Unimplemented, "method Subscribe not implemented")
 }
 func (UnimplementedSendBroadcastServer) mustEmbedUnimplementedSendBroadcastServer() {}
 func (UnimplementedSendBroadcastServer) testEmbeddedByValue()                       {}
@@ -88,7 +113,7 @@ func RegisterSendBroadcastServer(s grpc.ServiceRegistrar, srv SendBroadcastServe
 }
 
 func _SendBroadcast_Broadcast_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ReqMessage)
+	in := new(Message)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -100,10 +125,21 @@ func _SendBroadcast_Broadcast_Handler(srv interface{}, ctx context.Context, dec 
 		FullMethod: SendBroadcast_Broadcast_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SendBroadcastServer).Broadcast(ctx, req.(*ReqMessage))
+		return srv.(SendBroadcastServer).Broadcast(ctx, req.(*Message))
 	}
 	return interceptor(ctx, in, info, handler)
 }
+
+func _SendBroadcast_Subscribe_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(emptypb.Empty)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(SendBroadcastServer).Subscribe(m, &grpc.GenericServerStream[emptypb.Empty, Message]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type SendBroadcast_SubscribeServer = grpc.ServerStreamingServer[Message]
 
 // SendBroadcast_ServiceDesc is the grpc.ServiceDesc for SendBroadcast service.
 // It's only intended for direct use with grpc.RegisterService,
@@ -117,6 +153,12 @@ var SendBroadcast_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _SendBroadcast_Broadcast_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "Subscribe",
+			Handler:       _SendBroadcast_Subscribe_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "helloworld.proto",
 }

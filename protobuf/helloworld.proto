@@ -7,10 +7,11 @@ package helloworld;
 
 
 service SendBroadcast {
-    rpc Broadcast(ReqMessage) returns (google.protobuf.Empty) {}
+    rpc Broadcast(Message) returns (google.protobuf.Empty) {}
+    rpc Subscribe(google.protobuf.Empty) returns (stream Message);
 }
 
-message ReqMessage {
+message Message {
     int64 id = 1;
     string username = 2;
     string text = 3;
