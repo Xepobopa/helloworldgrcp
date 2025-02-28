@@ -13,6 +13,7 @@ type server struct {
 	pb.UnimplementedGreeterServer
 }
 
+
 func (s *server) SayHello(_ context.Context, in *pb.Request) (*pb.Reply, error) {
 	log.Printf("Received: %v", in.GetName())
 	return &pb.Reply{Message: "Hello, " + in.GetName() + "!"}, nil
